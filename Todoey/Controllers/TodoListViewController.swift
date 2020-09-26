@@ -44,15 +44,7 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
-        
-        let encoder = PropertyListEncoder()
-        do {
-            let data = try encoder.encode(self.itemArray)
-            try data.write(to: self.dataFilePath!)
-        } catch {
-            print("Error encoding item array, \(error)")
-        }
-        
+        saveItems()
         tableView.reloadData()
     }
     
@@ -69,28 +61,27 @@ class TodoListViewController: UITableViewController {
         }
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
-            
             let text = alertTextField.text!
-            
             if text != "" {
-                
                 self.itemArray.append(Item(title: text, done: false))
-                
-                let encoder = PropertyListEncoder()
-                do {
-                    let data = try encoder.encode(self.itemArray)
-                    try data.write(to: self.dataFilePath!)
-                } catch {
-                    print("Error encoding item array, \(error)")
-                }
-                
+                self.saveItems()
                 self.tableView.reloadData()
             }
         }
-        
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
     }
+    
+    //MARK: Model Manipulation Methods
+    
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
+    }
 }
-
