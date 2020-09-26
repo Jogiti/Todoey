@@ -10,12 +10,14 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    var itemArray: [Item] = []
-    let defaults = UserDefaults.standard
+    var itemArray = [Item]()
+    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
+        print(dataFilePath)
         super.viewDidLoad()
-        itemArray = (defaults.array(forKey: "TodoItemsArray") as? [Item]) ?? []
+        //itemArray = (defaults.array(forKey: "TodoItemsArray") as? [Item]) ?? []
     }
     
     //MARK: TableView Datasource Methods
@@ -25,9 +27,13 @@ class TodoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = tableView.dequeueReusableCell(withIdentifier: "TodoItemCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row].itemName
-        cell.accessoryType = itemArray[indexPath.row].done ? .checkmark : .none
+        
+        let item = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done ? .checkmark : .none
+        
         return cell
     }
     
@@ -38,6 +44,14 @@ class TodoListViewController: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(self.itemArray)
+            try data.write(to: self.dataFilePath!)
+        } catch {
+            print("Error encoding item array, \(error)")
+        }
         
         tableView.reloadData()
     }
@@ -55,13 +69,25 @@ class TodoListViewController: UITableViewController {
         }
         
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            
             let text = alertTextField.text!
+            
             if text != "" {
-                self.itemArray.append(Item(itemName: text, done: false))
-                self.defaults.set(self.itemArray, forKey: "TodoItemsArray")
+                
+                self.itemArray.append(Item(title: text, done: false))
+                
+                let encoder = PropertyListEncoder()
+                do {
+                    let data = try encoder.encode(self.itemArray)
+                    try data.write(to: self.dataFilePath!)
+                } catch {
+                    print("Error encoding item array, \(error)")
+                }
+                
                 self.tableView.reloadData()
             }
         }
+        
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
