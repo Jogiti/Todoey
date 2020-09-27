@@ -15,9 +15,8 @@ class TodoListViewController: UITableViewController {
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
     
     override func viewDidLoad() {
-        print(dataFilePath)
         super.viewDidLoad()
-        //itemArray = (defaults.array(forKey: "TodoItemsArray") as? [Item]) ?? []
+        loadItems()
     }
     
     //MARK: TableView Datasource Methods
@@ -82,6 +81,17 @@ class TodoListViewController: UITableViewController {
             try data.write(to: dataFilePath!)
         } catch {
             print("Error encoding item array, \(error)")
+        }
+    }
+    
+    func loadItems() {
+        let decoder = PropertyListDecoder()
+        do {
+            let data = try Data(contentsOf: dataFilePath!)
+            try itemArray = decoder.decode([Item].self, from: data)
+        }
+        catch {
+            print("Error decoding from data file, \(error)")
         }
     }
 }
